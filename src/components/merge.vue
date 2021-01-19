@@ -1,17 +1,22 @@
 <template>
   <div class="content">
-    <el-table :data="tableData">
+    <div class="header">在表格上面写总计</div>
+    <el-table :data="tableData" :span-method="arraySpanMethod" border>
       <el-table-column
         :prop="item.value"
         :label="item.title"
         v-for="(item, index) in tabelHeader"
         :key="index"
         align="center"
+        :fixed="
+          item.value == 'id' || item.value == 'name' || item.value == 'gender'
+        "
+        min-width="100"
       ></el-table-column>
     </el-table>
     <div class="sort" @click="goSort">排序</div>
 
-    <div class="merge" @click="goMerge">合并</div>
+    <div class="index" @click="goIndex">排序页</div>
 
     <el-dialog title="排序" :visible.sync="showSort" width="700px" center>
       <div class="sortBox">
@@ -55,7 +60,7 @@
 <script>
 import draggable from "vuedraggable";
 export default {
-  name: "index",
+  name: "merge",
   components: {
     draggable,
   },
@@ -69,36 +74,44 @@ export default {
       tabelHeader: [],
       tableData: [
         {
-          date: "2016-05-02",
+          id: "12987122",
           name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333,
+          gender: "男",
+          amount1: "234",
+          amount2: "3.2",
+          amount3: 10,
         },
         {
-          date: "2016-05-04",
+          id: "12987123",
           name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1517 弄",
-          zip: 200333,
+          gender: "男",
+          amount1: "165",
+          amount2: "4.43",
+          amount3: 12,
         },
         {
-          date: "2016-05-01",
+          id: "12987124",
           name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1519 弄",
-          zip: 200333,
+          gender: "男",
+          amount1: "324",
+          amount2: "1.9",
+          amount3: 9,
         },
         {
-          date: "2016-05-03",
+          id: "12987125",
           name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1516 弄",
-          zip: 200333,
+          gender: "男",
+          amount1: "621",
+          amount2: "2.2",
+          amount3: 17,
+        },
+        {
+          id: "12987126",
+          name: "王小虎",
+          gender: "男",
+          amount1: "539",
+          amount2: "4.1",
+          amount3: 15,
         },
       ],
       dragOptions: {
@@ -109,34 +122,45 @@ export default {
       },
       headerData: [
         {
-          title: "日期",
-          value: "date",
+          title: "ID",
+          value: "id",
         },
         {
           title: "姓名",
           value: "name",
         },
         {
-          title: "省份",
-          value: "province",
+          title: "性别",
+          value: "gender",
         },
         {
-          title: "市区",
-          value: "city",
+          title: "数值1",
+          value: "amount1",
         },
         {
-          title: "地址",
-          value: "address",
+          title: "数值2",
+          value: "amount2",
         },
         {
-          title: "邮编",
-          value: "zip",
+          title: "数值3",
+          value: "amount3",
         },
       ],
       allSelectList: [],
+      mergeArr: [],//固定的
     };
   },
   created() {
+    // 因为不确定会选择哪几个固定在左侧，所以就先都写总计
+    let obj = {};
+    obj.id = "总计";
+    obj.name = "总计";
+    obj.gender = "总计";
+    obj.amount1 = "1";
+    obj.amount2 = "2";
+    obj.amount3 = "3";
+    this.tableData.unshift(obj);
+
     this.headerData.forEach((el) => {
       this.checkedData.push(el.title);
       this.allSelectList.push(el.title);
@@ -144,6 +168,8 @@ export default {
     this.tabelHeader = this.headerData;
     this.selectedSort = this.checkedData;
     this.handleCheckedDataChange(this.checkedData);
+
+    this.mergeLine()
   },
   methods: {
     goSort() {
@@ -171,16 +197,55 @@ export default {
         });
       });
       this.showSort = false;
+      this.mergeLine()
     },
     cancelSubmit() {
       this.selectedSort = this.checkedData;
       this.showSort = false;
     },
 
-    // 跳转到合并页
-    goMerge() {
-      this.$router.push('/merge')
-    }
+    
+    // 合并几格
+    mergeLine() {
+      let arr = [
+        "id",
+        "name",
+        "gender",
+      ];
+      this.mergeArr = [];
+      arr.forEach((el) => {
+        this.tabelHeader.forEach((item) => {
+          if (el == item.value) {
+            this.mergeArr.push(el);
+          }
+        });
+      });
+    },
+    // 合并合计第一行
+    arraySpanMethod({ row, column, rowIndex, columnIndex }) {
+      if (rowIndex === 0) {
+        if (this.mergeArr.length >= 1) {
+          if (columnIndex === 0) {
+            return [1, this.mergeArr.length];
+          }
+        }
+        if (this.mergeArr.length >= 2) {
+          if (columnIndex === 1) {
+            return [0, 0];
+          }
+        }
+        if (this.mergeArr.length >= 3) {
+          if (columnIndex === 2) {
+            return [0, 0];
+          }
+        }
+      }
+    },
+
+    // 跳转到首页
+    goIndex() {
+      this.$router.push("/");
+    },
   },
 };
 </script>
@@ -189,8 +254,11 @@ export default {
 .content {
   width: 100%;
 }
+.header {
+  margin-bottom: 20px;
+}
 .content .el-table {
-  width: 80%;
+  width: 500px;
   margin: 0 auto;
 }
 .sort {
@@ -248,7 +316,8 @@ export default {
 .rightBox .drag-list:hover {
   border: 1px solid #20a0ff;
 }
-.merge {
+
+.index {
   position: fixed;
   bottom: 10%;
   left: 10%;
